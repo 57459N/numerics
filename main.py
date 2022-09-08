@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 
 def upper_triangle(matrix: np.array):
@@ -50,21 +49,28 @@ def residual(matrix_ab: np.array, vector_solution: np.array):
     return vector_residual
 
 
-def filled_matrix(rank: int):
-    matrix = np.array(np.empty((rank, rank)))
+def filled_matrix(text: str = ''):
+    print(text)
+    n = int(input('N: '))
+    m = int(input('M: '))
+    matrix = np.array(np.empty((n, m)))
 
-    for row in range(rank):
-        matrix[row] = [int(i) for i in input().split(' ')]
+    for row in range(n):
+        matrix[row] = [float(i) for i in input().split(' ')]
 
     return matrix
 
 
 def main():
-    # rank = int(input('Input rank of square matrix: '))
-    rng = np.random.default_rng()
 
-    matrix_a = rng.integers(-10, 10, size=(3, 3))
-    matrix_b = rng.integers(10, size=(3, 1))
+    if input('m - manual/ a - auto (default): ') == 'm':
+        matrix_a = filled_matrix('Enter matrix A: ')
+        matrix_b = filled_matrix('Enter matrix B: ')
+    else:
+        rng = np.random.default_rng()
+        matrix_a = rng.integers(-10, 10, size=(3, 3))
+        matrix_b = rng.integers(10, size=(3, 1))
+
     matrix_ab = np.concatenate((matrix_a, matrix_b), axis=1, dtype=float)
 
     print('Begin matrix: ')
