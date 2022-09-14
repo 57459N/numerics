@@ -4,11 +4,17 @@ import numpy as np
 def upper_triangle(matrix: np.array):
     rank = matrix.shape[0]
 
-    for i in range(rank - 1):
+    for i in range(rank):
+        col = matrix[i:, i]
+        abs_max_pos = np.where(col == max(col.min(), col.max(), key=abs))[0][0]
+        matrix[[i, abs_max_pos + i]] = matrix[[abs_max_pos + i, i]]
+
         matrix[i] /= matrix[i][i]
+
+        if i == rank - 1:
+            break
         for j in range(i + 1, rank):
             matrix[j] -= matrix[i] * matrix[j][i]
-    matrix[rank - 1] /= matrix[rank - 1][rank - 1]
 
     return matrix
 
@@ -22,16 +28,6 @@ def solution_from_triangle(matrix: np.array):
             [matrix_solution[j] * matrix[current_line][j] for j in range(rank)])
 
     return matrix_solution
-
-
-def solution(matrix: np.array):
-    first_col = matrix[:, 0]
-    abs_max_pos = np.where(first_col == max(first_col.min(), first_col.max(), key=abs))[0][0]
-    matrix[[0, abs_max_pos]] = matrix[[abs_max_pos, 0]]
-
-    matrix = upper_triangle(matrix)
-
-    return solution_from_triangle(matrix)
 
 
 def magnitude(vector):
@@ -62,7 +58,6 @@ def filled_matrix(text: str = ''):
 
 
 def main():
-
     if input('m - manual/ a - auto (default): ') == 'm':
         matrix_a = filled_matrix('Enter matrix A: ')
         matrix_b = filled_matrix('Enter matrix B: ')
@@ -76,8 +71,10 @@ def main():
     print('Begin matrix: ')
     print(matrix_ab)
 
-    matrix_solution = solution(matrix_ab)
+    matrix_triangle = upper_triangle(matrix_ab)
+    matrix_solution = solution_from_triangle(matrix_triangle)
 
+    print(f'\nUpper triangle:\n {matrix_triangle}')
     print(f'\nSolution:\n {matrix_solution}')
 
     vector_residual = residual(matrix_ab, matrix_solution)
@@ -94,8 +91,10 @@ def main():
     print(f'\nMatrix Ax~:\n {matrix_ax_tilde}')
     print(f'\nNew matrix:\n {matrix_ab_new}')
 
-    matrix_solution_new = solution(matrix_ab_new)
+    matrix_triangle_new = upper_triangle(matrix_ab_new)
+    matrix_solution_new = solution_from_triangle(matrix_triangle_new)
 
+    print(f'\nSecond triangle:\n {matrix_triangle_new}')
     print(f'\nSecond solution:\n {matrix_solution_new}')
 
     rel_error = relative_error(matrix_solution, matrix_solution_new)
