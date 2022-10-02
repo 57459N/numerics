@@ -30,6 +30,11 @@ def solution_from_triangle(matrix: np.array):
     return matrix_solution
 
 
+def get_solution(matrix: np.array):
+    matrix = upper_triangle(matrix)
+    return solution_from_triangle(matrix)
+
+
 def magnitude(vector):
     return np.sqrt(sum(i ** 2 for i in vector))
 
