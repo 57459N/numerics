@@ -47,7 +47,6 @@ def main():
     dispersion = sum([(y0 - y1) ** 2 for y0, y1 in zip(y_values, y_values_lsm)])/(len(x_values) - rank - 2)
     mean_quadratic_deviation = dispersion ** 0.5
 
-    pprint(powers_sums, compact=True)
     pprint(matrix_a)
     pprint(matrix_b)
     print(solution)
