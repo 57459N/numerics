@@ -1,3 +1,4 @@
+import copy
 from scipy.linalg import solve as matrix_solve
 import numpy as np
 from typing import Callable
@@ -28,43 +29,70 @@ def func2_derivative_x2(x1: float, x2: float):
     return -2 * x2
 
 
-def non_linear_solve(x1_begin, x2_begin, e0: float, e1: float, func1: Callable, func2: Callable, max_iters: int):
+def get_J(k: float, arr: np.array, *funcs: Callable):
+    J = np.matrix([np.zeros(len(arr))] * len(arr), float)
+    for f_idx, f in enumerate(funcs):
+        for num_idx, num in enumerate(arr):
+            values = copy.copy(arr)
+            values[num_idx] += values[num_idx] * k
+            J[f_idx, num_idx] = (f(*values) - f(*arr)) / (arr[num_idx] * k)
+
+    return J
+
+
+def non_linear_solve(x0: np.array, e0: float, e1: float, derivative_k: float, *funcs: Callable, max_iters: int):
     iteration = 0
 
-    delta1 = max(func1(x1_begin, x2_begin), func2(x1_begin, x2_begin))
+    delta1 = max(func1(*x0), func2(*x0))
     delta2 = 1
 
-    x1 = x1_begin
-    x2 = x2_begin
-
-    while True:
+    while (delta1 > e0 or delta2 > e1) and iteration < max_iters:
         iteration += 1
-        print(f'{iteration}:\tx1: {x1}\tx2:{x2}')
+        yield x0, iteration
 
-        F = np.matrix([[func1(x1, x2), func2(x1, x2)]]).T
-        J_ondef = np.matrix([[func1_derivative_x1(x1, x2), func1_derivative_x2(x2, x2)],
-                             [func2_derivative_x1(x1, x2), func2_derivative_x2(x1, x2)]])
-        J_005 = np.matrix([[(func1(x1 + x1 * 0.05, x2) - func1(x1, x2)) / x1 * 0.05,
-                            (func2(x1, x2 + x2 * 0.05) - func1(x1, x2)) / x2 * 0.05],
-                           [(func2(x1 + x1 * 0.05, x2) - func2(x1, x2)) / x1 * 0.05,
-                            (func2(x1, x2 + x2 * 0.05) - func2(x1, x2)) / x2 * 0.05]])
+        F = np.matrix([func1(*x0), func2(*x0)]).T
+        J = get_J(derivative_k, x0, *funcs)
 
-        J_001 = np.matrix([[(func1(x1 + x1 * 0.01, x2) - func1(x1, x2)) / x1 * 0.01,
-                            (func2(x1, x2 + x2 * 0.01) - func1(x1, x2)) / x2 * 0.01],
-                           [(func2(x1 + x1 * 0.01, x2) - func2(x1, x2)) / x1 * 0.01,
-                            (func2(x1, x2 + x2 * 0.01) - func2(x1, x2)) / x2 * 0.01]])
+        solution = matrix_solve(J, -F).T[0]
+        x0 += solution
 
-        J_01 = np.matrix([[(func1(x1 + x1 * 0.1, x2) - func1(x1, x2)) / x1 * 0.1,
-                           (func2(x1, x2 + x2 * 0.1) - func1(x1, x2)) / x2 * 0.1],
-                          [(func2(x1 + x1 * 0.1, x2) - func2(x1, x2)) / x1 * 0.1,
-                           (func2(x1, x2 + x2 * 0.1) - func2(x1, x2)) / x2 * 0.1]])
+        delta1 = abs(max(np.asarray(F.T)[0], key=abs))
+        delta2 = abs(max([dx if abs(dx) < 1 else dx / x0[idx] for idx, dx in enumerate(solution)], key=abs))
 
-        dx_ondef = matrix_solve(J_ondef, F)
-        dx_005 = matrix_solve(J_005, F)
-        dx_001 = matrix_solve(J_001, F)
-        dx_01 = matrix_solve(J_01, F)
 
-        
+def non_linear_solve_manual(x, y, e0, e1, max_iters):
+    iteration = 0
+
+    delta1 = max(func1(x, y), func2(x, y))
+    delta2 = 1
+
+    while (delta1 > e0 or delta2 > e1) and iteration < max_iters:
+        iteration += 1
+        print(f'{iteration}:\tx: {x}\ty: {y}')
+
+        F = np.matrix([func1(x, y), func2(x, y)]).T
+        J = np.matrix([[func1_derivative_x1(x, y), func1_derivative_x2(x, y)],
+                       [func2_derivative_x1(x, y), func2_derivative_x2(x, y)]])
+
+        solution = matrix_solve(J, -F).T[0]
+        x += solution[0]
+        y += solution[1]
+
+        delta1 = abs(max(np.asarray(F.T)[0], key=abs))
+        delta2 = max(solution[0] if abs(solution[0]) < 1 else solution[0] / x,
+                     solution[1] if abs(solution[1]) < 1 else solution[1] / y)
+
+
+def many_derivatives_cases(koefs: list[float], x0: np.array, e0: float, e1: float, *funcs: Callable, max_iters: int):
+    for i in koefs:
+        print(f'\n{i} derivative K:\n')
+        gen = non_linear_solve(x0, e0, e1, i, *funcs, max_iters=max_iters)
+        while True:
+            try:
+                x, iters = next(gen)
+                print(f'\t{iters}: ' + ' '.join([str(i) for i in x]))
+            except StopIteration:
+                break
 
 
 def main():
@@ -73,9 +101,18 @@ def main():
 
     e0 = pow(10, -9)
     e1 = pow(10, -9)
-    max_iters = 10000
+    max_iters = 100
     get_J(0.1, x0_2, func1, func2)
-    # non_linear_solve(x0_1[0], x0_1[0], e0, e1, func1, func2, max_iters)
+
+    koefs = [0.1, 0.05, 0.01]
+
+    many_derivatives_cases(koefs, x0_1, e0, e1, func1, func2, max_iters=max_iters)
+    many_derivatives_cases(koefs, x0_2, e0, e1, func1, func2, max_iters=max_iters)
+
+    print('\nmanual:\n')
+    non_linear_solve_manual(x0_1[0], x0_1[1], e0, e1, max_iters)
+    non_linear_solve_manual(x0_2[0], x0_2[1], e0, e1, max_iters)
+    a = [-1, 0]
 
 
 if __name__ == "__main__":
