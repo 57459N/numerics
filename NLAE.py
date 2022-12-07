@@ -1,7 +1,7 @@
 import copy
 from scipy.linalg import solve as matrix_solve
 import numpy as np
-from typing import Callable
+from typing import Callable, Optional
 from math import log10, log
 
 
@@ -43,14 +43,14 @@ def get_J(k: float, arr: np.array, *funcs: Callable):
 def non_linear_solve(x0: np.array, e0: float, e1: float, derivative_k: float, *funcs: Callable, max_iters: int):
     iteration = 0
 
-    delta1 = max(func1(*x0), func2(*x0))
+    delta1 = max([f(*x0) for f in funcs])
     delta2 = 1
 
     while (delta1 > e0 or delta2 > e1) and iteration < max_iters:
         iteration += 1
         yield x0, iteration
 
-        F = np.matrix([func1(*x0), func2(*x0)]).T
+        F = np.matrix([f(*x0) for f in funcs]).T
         J = get_J(derivative_k, x0, *funcs)
 
         solution = matrix_solve(J, -F).T[0]
