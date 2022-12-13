@@ -29,31 +29,35 @@ def func2_derivative_x2(x1: float, x2: float):
     return -2 * x2
 
 
-def get_J(k: float, arr: np.array, *funcs: Callable):
+def get_J(k: float, arr: np.array, *funcs: Callable, args: tuple):
     J = np.matrix([np.zeros(len(arr))] * len(arr), float)
     for f_idx, f in enumerate(funcs):
         for num_idx, num in enumerate(arr):
             values = copy.copy(arr)
             values[num_idx] += values[num_idx] * k
-            J[f_idx, num_idx] = (f(*values) - f(*arr)) / (arr[num_idx] * k)
+            J[f_idx, num_idx] = (f(*values, *args) - f(*arr, *args)) / (arr[num_idx] * k)
 
     return J
 
 
-def non_linear_solve(x0: np.array, e0: float, e1: float, derivative_k: float, *funcs: Callable, max_iters: int):
+def non_linear_solve(x0: np.array, e0: float, e1: float, derivative_k: float, *funcs: Callable, max_iters: int,
+                     args: tuple):
     iteration = 0
 
-    delta1 = max([f(*x0) for f in funcs])
+    delta1 = max([f(*x0, *args) for f in funcs])
     delta2 = 1
 
     while (delta1 > e0 or delta2 > e1) and iteration < max_iters:
         iteration += 1
         yield x0, iteration
 
-        F = np.matrix([f(*x0) for f in funcs]).T
-        J = get_J(derivative_k, x0, *funcs)
+        F = np.matrix([f(*x0, *args) for f in funcs]).T
+        J = get_J(derivative_k, x0, *funcs, args=args)
 
         solution = matrix_solve(J, -F).T[0]
+        print(f'{np.asarray(F.T)[0]=}')
+        print(f'{[dx if abs(dx) < 1 else dx / x0[idx] for idx, dx in enumerate(solution)]=}')
+
         x0 += solution
 
         delta1 = abs(max(np.asarray(F.T)[0], key=abs))
@@ -86,7 +90,7 @@ def non_linear_solve_manual(x, y, e0, e1, max_iters):
 def many_derivatives_cases(koefs: list[float], x0: np.array, e0: float, e1: float, *funcs: Callable, max_iters: int):
     for i in koefs:
         print(f'\n{i} derivative K:\n')
-        gen = non_linear_solve(x0, e0, e1, i, *funcs, max_iters=max_iters)
+        gen = non_linear_solve(x0, e0, e1, i, *funcs, max_iters=max_iters, args=())
         while True:
             try:
                 x, iters = next(gen)
@@ -102,7 +106,7 @@ def main():
     e0 = pow(10, -9)
     e1 = pow(10, -9)
     max_iters = 100
-    get_J(0.1, x0_2, func1, func2)
+    get_J(0.1, x0_2, func1, func2, args=())
 
     koefs = [0.1, 0.05, 0.01]
 
