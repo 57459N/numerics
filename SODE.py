@@ -21,7 +21,7 @@ def a_param(w: float):
 
 
 def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: float, tau_max: float):
-    for w in range(25, 48, 1):
+    for w in range(25, 48, 25):
         print(f'\t {w=}')
 
         t = 0
@@ -30,7 +30,8 @@ def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
         iters = 0
 
         x_data = []
-        y_data = []
+        y1_data = []
+        y2_data = []
 
         while (t < t_upper):
             f = np.array([f(*y, t=t, a=a_param(w)) for f in funcs], dtype=float)
@@ -41,25 +42,27 @@ def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
 
             t = t + tau
 
-            x_data.append(y[0])
-            y_data.append(y[1])
+            x_data.append(t)
+            y1_data.append(y[0])
+            y2_data.append(y[1])
             iters += 1
 
             print(f'{y=}\t{t=}')
 
         plt.title(f'{w=}')
-        plt.plot(x_data, y_data)
+        plt.plot(x_data, y1_data)
+        plt.plot(x_data, y2_data)
         plt.show()
 
         print(f'{iters=}')
 
 
 def equation(var, *data):
-    t, a = data
+    t, a, tau, y, y_next = data
     u1, u2 = var
     eq1 = du1dt(u1, u2, t, a)
-    eq2 = du1dt(u1, u2, t, a)
-    return [eq1, eq2]
+    eq2 = du2dt(u1, u2, t, a)
+    return y_next - y - np.array([eq1, eq2], dtype=float)
 
 
 def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: float, tau_min: float, tau_max: float):
@@ -68,30 +71,28 @@ def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
 
     tau = tau_min
     tau_prev = tau_min
-    tau_next = tau_min
 
     y = u0
     y_next = u0
     y_prev = u0
 
     x_data = []
-    y_data = []
+    y1_data = []
+    y2_data = []
 
-    Ek = ...
     while t < t_upper:
-        t_next = 0
         while True:
             t_next = t + tau
 
-            y_next = fsolve(equation, y_next, args=(t_next, a_param(40)))
+            y_next = fsolve(equation, y_next, args=(t_next, a_param(40), tau, y, y_next))
 
-            Ek = np.max(np.abs(-1 * (tau / (tau + tau_prev) * (y_next - y - (tau / tau_prev * (y - y_prev))))))
+            Ek = np.max(np.abs(-1 * tau / (tau + tau_prev) * (y_next - y - tau / tau_prev * (y - y_prev))))
 
             if Ek <= E:
                 break
 
             tau /= 2
-            tau_next = tau
+            t_next = t
             y_next = y
             print(1)
 
@@ -106,24 +107,26 @@ def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
         tau = tau_next
         t = t_next
 
-        x_data.append(y[0])
-        y_data.append(y[1])
+        x_data.append(t)
+        y1_data.append(y[0])
+        y2_data.append(y[1])
 
         print(f'{y_next=} {t_next=}')
 
-    plt.plot(x_data, y_data)
+    plt.plot(x_data, y1_data)
+    plt.plot(x_data, y2_data)
     plt.show()
 
 
 def main():
     u0 = np.array([0., -0.412])
     t = 1
-    E = 10 ** -6
-    tau_max = 10 ** -5
-    tau_min = 10 ** -8
+    E = 10 ** -2
+    tau_max = 10 ** -4
+    tau_min = 10 ** -5
 
     explicit_euler_method(du1dt, du2dt, u0=u0, t_upper=t, E=E, tau_max=tau_max)
-    # implicit_euler_method(du1dt, du2dt, u0=u0, t_upper=t, E=E, tau_max=tau_max, tau_min=tau_min)
+    implicit_euler_method(du1dt, du2dt, u0=u0, t_upper=t, E=E, tau_max=tau_max, tau_min=tau_min)
 
 
 if __name__ == "__main__":
