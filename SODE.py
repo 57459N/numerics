@@ -1,6 +1,5 @@
 from typing import Callable
 from scipy.optimize import fsolve
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -33,7 +32,7 @@ def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
         y1_data = []
         y2_data = []
 
-        while (t < t_upper):
+        while t < t_upper:
             f = np.array([f(*y, t=t, a=a_param(w)) for f in funcs], dtype=float)
 
             tau = min([E / (np.abs(f_i) + E / tau_max) for f_i in f])
