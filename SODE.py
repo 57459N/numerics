@@ -24,7 +24,7 @@ def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
     for w in range(25, 48, 25):
         print(f'\t {w=}')
 
-        t = 0
+        t = 0.1
         y = u0
 
         iters = 0
@@ -67,7 +67,7 @@ def equation(var, *data):
 
 def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: float, tau_min: float, tau_max: float):
     # 2
-    t = 0.2
+    t = 0.1
 
     tau = tau_min
     tau_prev = tau_min
@@ -84,7 +84,15 @@ def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
         while True:
             t_next = t + tau
 
-            y_next = fsolve(equation, y_next, args=(t_next, a_param(40), tau, y, y_next))
+            # y_next = fsolve(equation, y_next, args=(t_next, a_param(40), tau, y, y_next))
+
+            gen = n_solve(u0, 3, 0.3, 0.01, du1dt, du2dt, max_iters=100, args=(t_next, a_param(25)))
+            while True:
+                try:
+                    y_next, iters = next(gen)
+                    # print(f'\t{iters}: ' + ' '.join([str(i) for i in x]))
+                except StopIteration:
+                    break
 
             Ek = np.max(np.abs(-1 * tau / (tau + tau_prev) * (y_next - y - tau / tau_prev * (y - y_prev))))
 
@@ -113,6 +121,8 @@ def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
 
         print(f'{y_next=} {t_next=}')
 
+    y2_data = [-el -1.2 for el in y2_data]
+    y1_data = [-el - 1.2 for el in y1_data]
     plt.plot(x_data, y1_data)
     plt.plot(x_data, y2_data)
     plt.show()

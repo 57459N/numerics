@@ -55,8 +55,8 @@ def non_linear_solve(x0: np.array, e0: float, e1: float, derivative_k: float, *f
         J = get_J(derivative_k, x0, *funcs, args=args)
 
         solution = matrix_solve(J, -F).T[0]
-        print(f'{np.asarray(F.T)[0]=}')
-        print(f'{[dx if abs(dx) < 1 else dx / x0[idx] for idx, dx in enumerate(solution)]=}')
+        # print(f'{np.asarray(F.T)[0]=}')
+        # print(f'{[dx if abs(dx) < 1 else dx / x0[idx] for idx, dx in enumerate(solution)]=}')
 
         x0 += solution
 
