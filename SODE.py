@@ -5,26 +5,35 @@ import matplotlib.pyplot as plt
 from NLAE import non_linear_solve as n_solve
 
 
-def du1dt(u1: float, u2: float, t: float, a: float):
-    if t == 0:
-        return -u1 * u2 + 1.
+# def du1dt(u1: float, u2: float, t: float, a: float):
+#     if t == 0:
+#         return -u1 * u2 + 1.
+#
+#     return -u1 * u2 + np.sin(t) / t
+#
+#
+# def du2dt(u1: float, u2: float, t: float, a: float):
+#     return -(u2 * u2) + a * t / (1 + t * t)
+# def a_param(w: float):
+#     return 2.5 + w / 40.
 
-    return -u1 * u2 + np.sin(t) / t
+def du1dt(u1: float, u2: float, t: float, a: float):
+    return u2 - (a * u1 + 0.25 * u2) * u1
 
 
 def du2dt(u1: float, u2: float, t: float, a: float):
-    return -(u2 * u2) + a * t / (1 + t * t)
+    return np.exp(u1) - (u1 + a * u2) * u1
 
 
 def a_param(w: float):
-    return 2.5 + w / 40.
+    return 2
 
 
 def explicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: float, tau_max: float):
     for w in range(25, 48, 25):
         print(f'\t {w=}')
 
-        t = 0.1
+        t = 0
         y = u0
 
         iters = 0
@@ -67,7 +76,7 @@ def equation(var, *data):
 
 def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: float, tau_min: float, tau_max: float):
     # 2
-    t = 0.1
+    t = 0
 
     tau = tau_min
     tau_prev = tau_min
@@ -121,16 +130,19 @@ def implicit_euler_method(*funcs: Callable, u0: np.array, t_upper: float, E: flo
 
         print(f'{y_next=} {t_next=}')
 
-    y2_data = [-el -1.2 for el in y2_data]
-    y1_data = [-el - 1.2 for el in y1_data]
+    # y2_data = [-el - 1.2 for el in y2_data]
+    # y1_data = [-el - 1.2 for el in y1_data]
+
     plt.plot(x_data, y1_data)
     plt.plot(x_data, y2_data)
     plt.show()
 
 
 def main():
-    u0 = np.array([0.00001, -0.412])
-    t = 10
+    # u0 = np.array([0., -0.412])
+    u0 = np.array([1, 0.01])
+
+    t = 1
     E = 10 ** -1
     tau_max = 10 ** -2
     tau_min = 10 ** -3
