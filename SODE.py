@@ -121,15 +121,15 @@ def implicit_euler_method(*funcs: Callable, param: Callable, param_values: np.nd
 
             print(f'{y_next=} {t_next=}')
 
-        plt.title(f'Implicit with correction, param = {param_value}')
+        plt.title(f'Implicit with clarification, param = {param_value}')
         plt.plot(x_data, y1_data)
         plt.plot(x_data, y2_data)
         plt.show()
 
 
 def main():
-    # u0 = np.array([0., -0.412])
-    u0 = np.array([1, 0.])
+    u0_1 = np.array([0., -0.412])
+    u0_2 = np.array([1, 0.])
 
     t = 1
     E = 10 ** -1
@@ -144,14 +144,14 @@ def main():
     #     except StopIteration:
     #         break
 
-    explicit_euler_method(du1dt_1, du2dt_1, param=a_param_1, param_values=[25.,], u0=u0, t_upper=t,
+    explicit_euler_method(du1dt_1, du2dt_1, param=a_param_1, param_values=[25.,], u0=u0_1, t_upper=t,
                           E=E, tau_max=tau_max)
-    implicit_euler_method(du1dt_1, du2dt_1, param=a_param_1, param_values=np.array([25], dtype=float), u0=u0, t_upper=t,
+    implicit_euler_method(du1dt_1, du2dt_1, param=a_param_1, param_values=np.array([25], dtype=float), u0=u0_1, t_upper=t,
                           E=E, tau_max=tau_max, tau_min=tau_min)
 
-    explicit_euler_method(du1dt_2, du2dt_2, param=lambda x: 2, param_values=[1.], u0=u0,
+    explicit_euler_method(du1dt_2, du2dt_2, param=lambda x: 2, param_values=[1.], u0=u0_2,
                           t_upper=t, E=E, tau_max=tau_max)
-    implicit_euler_method(du1dt_2, du2dt_2, param=lambda x: 2, param_values=np.array([1.], dtype=float), u0=u0,
+    implicit_euler_method(du1dt_2, du2dt_2, param=lambda x: 2, param_values=np.array([1.], dtype=float), u0=u0_2,
                           t_upper=t, E=E, tau_max=tau_max, tau_min=tau_min)
 
 
